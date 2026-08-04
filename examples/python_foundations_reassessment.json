@@ -1,0 +1,32 @@
+{
+  "session_id": "demo-python-foundations-001-round-2",
+  "domain": "python_foundations",
+  "learner": {
+    "id": "demo-learner",
+    "goal": "完成函数和表达式的针对性练习后，复测学习状态。"
+  },
+  "consent": {
+    "analysis_authorized": true,
+    "retention": "local-only"
+  },
+  "learning_signals": [
+    {"concept": "variables", "confidence": 0.8, "observed_correct": true, "evidence_id": "r2-variables-01", "question_type": "concept"},
+    {"concept": "expressions", "confidence": 0.7, "observed_correct": false, "evidence_id": "r1-expressions-01", "question_type": "prediction"},
+    {"concept": "expressions", "confidence": 0.65, "observed_correct": true, "evidence_id": "r2-expressions-01", "question_type": "prediction"},
+    {"concept": "expressions", "confidence": 0.7, "observed_correct": true, "evidence_id": "r2-expressions-02", "question_type": "prediction"},
+    {"concept": "expressions", "confidence": 0.75, "observed_correct": true, "evidence_id": "r2-expressions-03", "question_type": "prediction"},
+    {"concept": "functions", "confidence": 0.9, "observed_correct": false, "evidence_id": "r1-functions-01", "question_type": "debug"},
+    {"concept": "functions", "confidence": 0.75, "observed_correct": false, "evidence_id": "r1-functions-02", "question_type": "debug"},
+    {"concept": "functions", "confidence": 0.82, "observed_correct": false, "evidence_id": "r1-functions-03", "question_type": "debug"},
+    {"concept": "functions", "confidence": 0.5, "observed_correct": true, "evidence_id": "r2-functions-01", "question_type": "retrieval"},
+    {"concept": "functions", "confidence": 0.6, "observed_correct": true, "evidence_id": "r2-functions-02", "question_type": "retrieval"},
+    {"concept": "functions", "confidence": 0.7, "observed_correct": true, "evidence_id": "r2-functions-03", "question_type": "application"},
+    {"concept": "functions", "confidence": 0.75, "observed_correct": true, "evidence_id": "r2-functions-04", "question_type": "application"},
+    {"concept": "collections", "confidence": 0.55, "observed_correct": true, "evidence_id": "r2-collections-01", "question_type": "application"},
+    {"concept": "collections", "confidence": 0.6, "observed_correct": true, "evidence_id": "r2-collections-02", "question_type": "application"},
+    {"concept": "collections", "confidence": 0.65, "observed_correct": true, "evidence_id": "r2-collections-03", "question_type": "application"}
+  ],
+  "interactions": [
+    {"topic": "functions", "question_type": "reflection", "evidence_id": "r2-reflection-01", "content": "我发现之前把 return 放进了错误的分支。"}
+  ]
+}

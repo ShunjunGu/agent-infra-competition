@@ -1,0 +1,79 @@
+{
+  "schema_version": "0.1.0",
+  "team": {
+    "name": "cogniguide-demo",
+    "version": "0.1.0",
+    "purpose": "Evidence-driven metacognitive learning workflow for a controlled demo.",
+    "reference_runtime": "../cogniguide/engine.py",
+    "agentteams_execution_status": "declarative adapter; requires a separately configured AgentTeams environment",
+    "creation_policy": {
+      "mode": "serial",
+      "order": [
+        "interaction_evidence_analyst",
+        "knowledge_state_estimator",
+        "learning_path_planner",
+        "report_verifier",
+        "team"
+      ],
+      "rule": "Create and health-check each business Worker before creating the Team. Manager creates a new independent TeamLeader during Team creation."
+    },
+    "team_leader": {
+      "id": "cogniguide_demo_leader",
+      "name": "cogniguide-demo-leader",
+      "rule": "Must be a dedicated Worker. Do not assign a business Worker as TeamLeader."
+    },
+    "shared_state": {
+      "location_pattern": "shared/tasks/task-{task_id}",
+      "format": "versioned JSON",
+      "required_fields": ["schema_version", "task_id", "status", "trace_id", "audit_events"]
+    },
+    "risk_policy": {
+      "block_before_analysis": ["analysis_authorized=false"],
+      "human_review": ["privacy_finding", "insufficient_evidence", "high_calibration_error"],
+      "auto_execute": [],
+      "approval_only": ["persistent_learning_profile_write"]
+    }
+  },
+  "agents": [
+    {
+      "id": "interaction_evidence_analyst",
+      "name": "Interaction Evidence Analyst",
+      "skills": ["consent-boundary", "interaction-evidence"],
+      "tools": ["assessment.validate", "audit.append"],
+      "input_state": ["task_request", "policy"],
+      "output_state": "interaction_profile"
+    },
+    {
+      "id": "knowledge_state_estimator",
+      "name": "Knowledge State Estimator",
+      "skills": ["knowledge-tracing"],
+      "tools": ["framework.retrieve", "audit.append"],
+      "input_state": ["interaction_profile"],
+      "output_state": "knowledge_state"
+    },
+    {
+      "id": "learning_path_planner",
+      "name": "Learning Path Planner",
+      "skills": ["prerequisite-path"],
+      "tools": ["framework.retrieve", "plan.validate", "audit.append"],
+      "input_state": ["knowledge_state"],
+      "output_state": "learning_plan"
+    },
+    {
+      "id": "report_verifier",
+      "name": "Report Verifier",
+      "skills": ["report-verification"],
+      "tools": ["evidence.verify", "plan.validate", "audit.append"],
+      "input_state": ["interaction_profile", "knowledge_state", "learning_plan"],
+      "output_state": "report"
+    }
+  ],
+  "workflow": [
+    {"step": 1, "agent": "cogniguide_demo_leader", "action": "receive_task_and_create_state"},
+    {"step": 2, "agent": "interaction_evidence_analyst", "action": "validate_consent_and_extract_evidence"},
+    {"step": 3, "agent": "knowledge_state_estimator", "action": "estimate_bkt_and_calibration"},
+    {"step": 4, "agent": "learning_path_planner", "action": "plan_with_prerequisite_constraints"},
+    {"step": 5, "agent": "report_verifier", "action": "verify_evidence_policy_and_plan"},
+    {"step": 6, "agent": "cogniguide_demo_leader", "action": "publish_or_request_human_review"}
+  ]
+}
