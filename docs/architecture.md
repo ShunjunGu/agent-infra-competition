@@ -6,14 +6,14 @@ CogniGuide 的目标不是用大模型给学习者贴“认知盲区”标签，
 
 这使它可以服务企业培训、岗位能力提升和知识工作流，而非只是一轮个人聊天。
 
-## 2. 双运行层
+## 2. 原生 AgentTeams 层与确定性参考基线
 
 | 层 | 当前状态 | 责任 |
 | --- | --- | --- |
-| `cogniguide/` 本地参考运行时 | 已测试 | 无 API Key 的确定性闭环、产物和回归测试 |
-| `agentteams/` 适配层 | 设计/待环境验证 | 在 AgentTeams 中创建独立 TeamLeader、Worker、Skill、共享状态和审批策略 |
+| `agentteams/` 原生参赛 Demo | 资产和本地工具网关已测试；真实 Team Room 待 Docker 环境验证 | 由 Manager 创建独立 TeamLeader、4 个 Worker、Skill、共享状态和工具调用；Worker/TeamLeader 负责真实协作 |
+| `cogniguide/` 本地确定性参考基线 | 已测试 | 计算/审计逻辑的无 API Key 回归验证，不创建或编排 AgentTeams Worker |
 
-两层共享同一份业务角色、输入输出契约和安全策略。参考运行时不伪装为 AgentTeams 运行证据。
+两层共享业务角色、输入输出契约和安全策略，但职责不能倒置：`cogniguide/` 不伪装为 AgentTeams 运行证据，也不应被 Worker 当作“一次调用就完成全部多 Agent 工作”的工具。`agentteams/` 内的网关只提供最小的数据、框架、验证和审计能力，TeamLeader/Worker 才是协作主体。
 
 ## 3. 状态机
 
@@ -31,7 +31,7 @@ KNOWLEDGE_STATE_ESTIMATED -> NEEDS_MORE_DATA  # 每概念少于 3 条可判分�
 VERIFIED -> HUMAN_REVIEW_REQUIRED          # 低样本、隐私发现、校准异常
 ```
 
-Team Leader 只负责路由和状态转换；业务结论由 Worker 的结构化产物输出；Verifier 不允许无证据结论发布。
+在真实 AgentTeams 部署中，Manager 不进入业务 Team Room；独立 TeamLeader 只负责路由和状态转换；业务结论由 Worker 的结构化产物输出；Verifier 不允许无证据结论发布。
 
 ## 4. 业务 Agent 与状态契约
 
@@ -82,6 +82,12 @@ Team Leader 只负责路由和状态转换；业务结论由 Worker 的结构化
 - 审计记录保存状态变更、哈希、调用结果和证据索引，不保存模型思维链；
 - 建议均为可拒绝、可修改的学习建议，不触发任何高风险自动决策。
 
-## 7. 竞赛价值
+## 7. 工具/MCP 与运行证据
+
+工具目录使用 HTTP gateway 作为可本地复现的 MCP 前置契约：每次调用携带 `schema_version`、`task_id`、`trace_id` 和 `actor`，并在网关侧检查角色最小权限。未来生产化时可不改业务 Skill 地映射到 MCP Server。
+
+完整运行证据应包括：Worker/TeamLeader 创建与健康检查记录、Team Room 中的协作消息、每个 Worker 的结构化 JSON 产物、工具 trace/audit、以及最终的验证状态。当前环境 Docker Engine 未启动，因此仓库仅声称已验证工具网关和确定性基线；不得将其表述为已完成真实 AgentTeams Team Room 运行。
+
+## 8. 竞赛价值
 
 本设计把“多 Agent 协同”落到可审计系统能力：角色隔离、结构化上下文、可替换 Skill、验证门、异常分支、完整性证明和人工确认，而不是把多个 Prompt 串起来。

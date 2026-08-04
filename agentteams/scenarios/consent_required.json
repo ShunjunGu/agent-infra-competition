@@ -1,0 +1,21 @@
+{
+  "id": "consent_required",
+  "task_id": "CG-1002",
+  "title": "未授权学习数据分析请求",
+  "consent": {
+    "analysis_authorized": false,
+    "persistent_profile_authorized": false,
+    "retention": "local-only"
+  },
+  "domain_pack": {
+    "id": "python_foundations@0.1.0",
+    "label": "Python 基础",
+    "bkt_parameters": {"version": "demo-0.1.0", "prior": 0.2, "learn": 0.15, "guess": 0.2, "slip": 0.1, "priority_min_scored_events": 3},
+    "concepts": [{"id": "variables", "label": "变量与数据类型", "prerequisites": []}]
+  },
+  "assessment_events": [
+    {"event_id": "evt-hidden-01", "concept": "variables", "observed_correct": false, "confidence": 0.9, "question_type": "concept", "rubric_ref": "python-basics-v1:variables-01"}
+  ],
+  "interaction_observations": [],
+  "expected_demo_outcome": {"expected_status": "BLOCKED"}
+}

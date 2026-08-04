@@ -1,79 +1,96 @@
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "team": {
     "name": "cogniguide-demo",
-    "version": "0.1.0",
-    "purpose": "Evidence-driven metacognitive learning workflow for a controlled demo.",
-    "reference_runtime": "../cogniguide/engine.py",
-    "agentteams_execution_status": "declarative adapter; requires a separately configured AgentTeams environment",
+    "version": "0.2.0",
+    "purpose": "Evidence-driven metacognitive learning assistance implemented as an AgentTeams-native Team.",
+    "execution_boundary": "AgentTeams Manager and Worker runtime owns creation, routing, collaboration, and shared task state. The local HTTP gateway is tools only; it is not an orchestrator.",
+    "agentteams_execution_status": "Native Team assets and gateway contracts are implemented. Live Team Room evidence requires a separately configured Docker/AgentTeams environment.",
     "creation_policy": {
       "mode": "serial",
       "order": [
-        "interaction_evidence_analyst",
-        "knowledge_state_estimator",
-        "learning_path_planner",
-        "report_verifier",
-        "team"
+        "interaction-evidence-analyst",
+        "knowledge-state-estimator",
+        "learning-path-planner",
+        "report-verifier",
+        "cogniguide-demo"
       ],
-      "rule": "Create and health-check each business Worker before creating the Team. Manager creates a new independent TeamLeader during Team creation."
+      "rule": "Manager health-checks each business Worker before creating the Team and a new independent TeamLeader. Manager never performs the business task."
     },
     "team_leader": {
-      "id": "cogniguide_demo_leader",
       "name": "cogniguide-demo-leader",
-      "rule": "Must be a dedicated Worker. Do not assign a business Worker as TeamLeader."
+      "rule": "Dedicated Worker only. It routes verified artifacts and may not be replaced by a business Worker."
     },
     "shared_state": {
-      "location_pattern": "shared/tasks/task-{task_id}",
+      "location_pattern": "shared/tasks/task-{task_id}/",
       "format": "versioned JSON",
-      "required_fields": ["schema_version", "task_id", "status", "trace_id", "audit_events"]
+      "required_fields": ["schema_version", "task_id", "trace_id", "producer", "status"],
+      "artifacts": [
+        "01_interaction_profile.json",
+        "02_learner_state.json",
+        "03_learning_path.json",
+        "04_report_verification.json"
+      ]
+    },
+    "tool_gateway": {
+      "catalog": "tools/tool_catalog.json",
+      "transport": "HTTP JSON",
+      "request_schema_version": "cogniguide.tool-request/v1",
+      "required_request_metadata": ["schema_version", "task_id", "trace_id", "actor"],
+      "authorization": "Gateway validates task scope, actor allow-list, authorization boundary, and data-minimized audit records. Production must bind actor identity to service credentials."
     },
     "risk_policy": {
       "block_before_analysis": ["analysis_authorized=false"],
-      "human_review": ["privacy_finding", "insufficient_evidence", "high_calibration_error"],
+      "human_review": ["privacy_finding", "insufficient_evidence", "high_calibration_error", "second_validation_failure"],
+      "terminal_statuses": ["PUBLISHED", "NEEDS_MORE_DATA", "HUMAN_REVIEW_REQUIRED", "BLOCKED"],
       "auto_execute": [],
       "approval_only": ["persistent_learning_profile_write"]
     }
   },
   "agents": [
     {
-      "id": "interaction_evidence_analyst",
-      "name": "Interaction Evidence Analyst",
+      "name": "interaction-evidence-analyst",
       "skills": ["consent-boundary", "interaction-evidence"],
-      "tools": ["assessment.validate", "audit.append"],
-      "input_state": ["task_request", "policy"],
-      "output_state": "interaction_profile"
+      "tools": [
+        "learning_data.get_task_metadata",
+        "learning_data.get_assessment_events",
+        "learning_data.get_interaction_observations",
+        "audit.append"
+      ],
+      "input_artifacts": ["task_request"],
+      "output_artifact": "01_interaction_profile.json"
     },
     {
-      "id": "knowledge_state_estimator",
-      "name": "Knowledge State Estimator",
+      "name": "knowledge-state-estimator",
       "skills": ["knowledge-tracing"],
-      "tools": ["framework.retrieve", "audit.append"],
-      "input_state": ["interaction_profile"],
-      "output_state": "knowledge_state"
+      "tools": ["framework.get_domain_pack", "framework.get_bkt_parameters", "audit.append"],
+      "input_artifacts": ["01_interaction_profile.json"],
+      "output_artifact": "02_learner_state.json"
     },
     {
-      "id": "learning_path_planner",
-      "name": "Learning Path Planner",
+      "name": "learning-path-planner",
       "skills": ["prerequisite-path"],
-      "tools": ["framework.retrieve", "plan.validate", "audit.append"],
-      "input_state": ["knowledge_state"],
-      "output_state": "learning_plan"
+      "tools": ["framework.get_domain_pack", "plan.validate_prerequisites", "audit.append"],
+      "input_artifacts": ["02_learner_state.json"],
+      "output_artifact": "03_learning_path.json"
     },
     {
-      "id": "report_verifier",
-      "name": "Report Verifier",
+      "name": "report-verifier",
       "skills": ["report-verification"],
-      "tools": ["evidence.verify", "plan.validate", "audit.append"],
-      "input_state": ["interaction_profile", "knowledge_state", "learning_plan"],
-      "output_state": "report"
+      "tools": ["evidence.verify_refs", "plan.validate_prerequisites", "audit.append"],
+      "input_artifacts": [
+        "01_interaction_profile.json",
+        "02_learner_state.json",
+        "03_learning_path.json"
+      ],
+      "output_artifact": "04_report_verification.json"
     }
   ],
-  "workflow": [
-    {"step": 1, "agent": "cogniguide_demo_leader", "action": "receive_task_and_create_state"},
-    {"step": 2, "agent": "interaction_evidence_analyst", "action": "validate_consent_and_extract_evidence"},
-    {"step": 3, "agent": "knowledge_state_estimator", "action": "estimate_bkt_and_calibration"},
-    {"step": 4, "agent": "learning_path_planner", "action": "plan_with_prerequisite_constraints"},
-    {"step": 5, "agent": "report_verifier", "action": "verify_evidence_policy_and_plan"},
-    {"step": 6, "agent": "cogniguide_demo_leader", "action": "publish_or_request_human_review"}
+  "artifact_dependency_order": [
+    "task_request",
+    "01_interaction_profile.json",
+    "02_learner_state.json",
+    "03_learning_path.json",
+    "04_report_verification.json"
   ]
 }

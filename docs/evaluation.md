@@ -4,6 +4,7 @@
 
 ```powershell
 py -m unittest discover -s tests -v
+py -m unittest discover -s agentteams/tests -v
 ```
 
 | 用例 | 验证目标 |
@@ -13,6 +14,24 @@ py -m unittest discover -s tests -v
 | 冷启动 | 单条高置信错误只能产生 `needs_more_data`，不能成为高优先级结论 |
 | 复测闭环 | 新的正确作答事件进入后，函数的 BKT 掌握度上升 |
 | 完整性 | `manifest.json` 能发现产物被篡改 |
+| 工具网关授权边界 | 未授权场景下，网关拒绝读取评估事件和交互观察 |
+| 工具网关最小权限 | 请求元数据、角色允许列表、证据引用和先修路径在网关侧校验 |
+
+## 已执行的真实模型预检
+
+以下预检通过真实 OpenAI-compatible Responses API 调用模型，不伪造模型输出，也不把
+它表述为 AgentTeams Team Room 运行：
+
+```powershell
+$env:OPENAI_BASE_URL = "https://api.hostcentral.cc"
+$env:OPENAI_MODEL = "gpt-5.6-luna"
+$env:OPENAI_API_KEY = "<local secret only>"
+python agentteams\tools\live_worker_contract.py
+```
+
+本次验证中，`gpt-5.6-luna` 实际生成了授权场景的 Evidence Analyst JSON（`functions`
+聚合为 3 条可判分事件、0 条正确、6 个 evidence refs），并对未授权场景返回
+`BLOCKED` 且不产生概念证据或引用。脚本只从当前进程环境读取密钥，输出为脱敏摘要。
 
 ## 推荐的竞赛展示指标
 
@@ -34,3 +53,14 @@ py -c "from cogniguide import verify_artifacts; print(verify_artifacts('runs/evi
 ```
 
 `runs/` 被 `.gitignore` 排除，因为它可能含用户学习数据。演示录像或 PPT 中可以展示其完全脱敏的字段、HTML 报告和 trace 摘要。
+
+## AgentTeams 真实运行取证清单
+
+以下证据必须在 Docker Engine 和 AgentTeams 环境可用后采集；当前仓库不把本地 Python 运行结果误称为真实 Team 运行：
+
+1. Manager 串行创建并健康检查 4 个业务 Worker、独立 TeamLeader 和 Team 的记录；
+2. Worker 容器访问 HTTP tool gateway 的 `health` 与受控工具调用记录；
+3. Team Room 向 `@cogniguide-demo-leader` 发送的两条任务及协作消息；
+4. `shared/tasks/task-CG-1001/` 的结构化产物、网关 trace/audit 和最终 `HUMAN_REVIEW_REQUIRED`；
+5. `CG-1002` 未授权任务的 `BLOCKED`，以及 trace 中不存在学习内容读取调用；
+6. 不包含 API Key、原始学习文本或模型思维链的脱敏截图/日志摘要。
