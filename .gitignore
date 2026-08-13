@@ -8,3 +8,15 @@ AgentTeams-配置信息.md
 Thumbs.db
 *.tmp
 .DS_Store
+__pycache__/
+*.py[cod]
+
+# CogniGuide 本地运行产物（可能含学习数据，不入库）
+runs/
+
+# Local OpenAI-compatible / AgentTeams credentials.
+.env
+.env.*
+!.env.example
+.agentteams.env
+auth.json

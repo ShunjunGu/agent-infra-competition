@@ -1,0 +1,47 @@
+{
+  "id": "python_foundations_overconfidence",
+  "task_id": "CG-1001",
+  "title": "Python 基础：高置信错误后的先修修复与复测",
+  "consent": {
+    "analysis_authorized": true,
+    "persistent_profile_authorized": false,
+    "retention": "local-only"
+  },
+  "domain_pack": {
+    "id": "python_foundations@0.1.0",
+    "label": "Python 基础",
+    "bkt_parameters": {
+      "version": "demo-0.1.0",
+      "prior": 0.2,
+      "learn": 0.15,
+      "guess": 0.2,
+      "slip": 0.1,
+      "priority_min_scored_events": 3
+    },
+    "concepts": [
+      {"id": "variables", "label": "变量与数据类型", "prerequisites": []},
+      {"id": "expressions", "label": "表达式与运算", "prerequisites": ["variables"]},
+      {"id": "conditionals", "label": "条件分支", "prerequisites": ["variables", "expressions"]},
+      {"id": "functions", "label": "函数与参数", "prerequisites": ["variables", "expressions"]},
+      {"id": "collections", "label": "列表与字典", "prerequisites": ["variables"]},
+      {"id": "debugging", "label": "调试与验证", "prerequisites": ["functions", "collections"]}
+    ]
+  },
+  "assessment_events": [
+    {"event_id": "evt-variables-01", "concept": "variables", "observed_correct": true, "confidence": 0.85, "question_type": "concept", "rubric_ref": "python-basics-v1:variables-01"},
+    {"event_id": "evt-expressions-01", "concept": "expressions", "observed_correct": false, "confidence": 0.8, "question_type": "prediction", "rubric_ref": "python-basics-v1:expressions-01"},
+    {"event_id": "evt-functions-01", "concept": "functions", "observed_correct": false, "confidence": 0.9, "question_type": "debug", "rubric_ref": "python-basics-v1:functions-01"},
+    {"event_id": "evt-functions-02", "concept": "functions", "observed_correct": false, "confidence": 0.75, "question_type": "debug", "rubric_ref": "python-basics-v1:functions-02"},
+    {"event_id": "evt-functions-03", "concept": "functions", "observed_correct": false, "confidence": 0.82, "question_type": "debug", "rubric_ref": "python-basics-v1:functions-03"},
+    {"event_id": "evt-collections-01", "concept": "collections", "observed_correct": true, "confidence": 0.45, "question_type": "application", "rubric_ref": "python-basics-v1:collections-01"}
+  ],
+  "interaction_observations": [
+    {"evidence_id": "obs-functions-01", "concept": "functions", "kind": "repeated_debug_request"},
+    {"evidence_id": "obs-functions-02", "concept": "functions", "kind": "repeated_debug_request"}
+  ],
+  "expected_demo_outcome": {
+    "must_reference": ["evt-functions-01", "evt-functions-02", "evt-functions-03"],
+    "must_not_claim": ["psychological diagnosis", "persistent profile written", "unverified learning improvement"],
+    "expected_status": "HUMAN_REVIEW_REQUIRED"
+  }
+}

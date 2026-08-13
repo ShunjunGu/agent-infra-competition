@@ -1,0 +1,33 @@
+{
+  "transport": "http-mock-tool-gateway",
+  "base_url": "http://<TOOL_HOST_REACHABLE_BY_WORKER>:18089",
+  "call_pattern": "POST /tools/{scenario_id}/{tool_name}.{function_name}",
+  "request_schema": {
+    "version": "cogniguide.tool-request/v1",
+    "required_metadata": ["schema_version", "task_id", "trace_id", "actor"],
+    "task_id_rule": "must exactly match the task_id registered by the scenario",
+    "trace_id_rule": "must match [A-Za-z0-9][A-Za-z0-9._:-]{0,127}",
+    "body_example": {
+      "schema_version": "cogniguide.tool-request/v1",
+      "task_id": "CG-1001",
+      "trace_id": "cg1001-run-001",
+      "actor": "interaction-evidence-analyst"
+    }
+  },
+  "authorization_model": "The gateway enforces the listed demo role policy; deployment must bind actor identity to an authenticated service credential.",
+  "role_permissions": {
+    "interaction-evidence-analyst": ["learning_data.get_task_metadata", "learning_data.get_assessment_events", "learning_data.get_interaction_observations", "audit.append"],
+    "knowledge-state-estimator": ["learning_data.get_task_metadata", "framework.get_domain_pack", "framework.get_bkt_parameters", "audit.append"],
+    "learning-path-planner": ["learning_data.get_task_metadata", "framework.get_domain_pack", "plan.validate_prerequisites", "audit.append"],
+    "report-verifier": ["learning_data.get_task_metadata", "evidence.verify_refs", "plan.validate_prerequisites", "audit.append"],
+    "cogniguide-demo-leader": ["learning_data.get_task_metadata", "audit.append"],
+    "demo-operator": ["system.reset"]
+  },
+  "tools": [
+    {"name": "learning_data", "functions": ["get_task_metadata", "get_assessment_events", "get_interaction_observations"], "future_mcp_mapping": "learning.evidence.read"},
+    {"name": "framework", "functions": ["get_domain_pack", "get_bkt_parameters"], "future_mcp_mapping": "knowledge.framework.retrieve"},
+    {"name": "evidence", "functions": ["verify_refs"], "future_mcp_mapping": "evidence.verify"},
+    {"name": "plan", "functions": ["validate_prerequisites"], "future_mcp_mapping": "learning.path.validate"},
+    {"name": "audit", "functions": ["append"], "future_mcp_mapping": "audit.append"}
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "schema_version": "0.2.0",
+  "team": {
+    "name": "cogniguide-demo",
+    "version": "0.2.0",
+    "purpose": "Evidence-driven metacognitive learning assistance implemented as an AgentTeams-native Team.",
+    "execution_boundary": "AgentTeams Manager and Worker runtime owns creation, routing, collaboration, and shared task state. The local HTTP gateway is tools only; it is not an orchestrator.",
+    "agentteams_execution_status": "Native Team assets and gateway contracts are implemented. Live Team Room evidence requires a separately configured Docker/AgentTeams environment.",
+    "creation_policy": {
+      "mode": "serial",
+      "order": [
+        "interaction-evidence-analyst",
+        "knowledge-state-estimator",
+        "learning-path-planner",
+        "report-verifier",
+        "cogniguide-demo"
+      ],
+      "rule": "Manager health-checks each business Worker before creating the Team and a new independent TeamLeader. Manager never performs the business task."
+    },
+    "team_leader": {
+      "name": "cogniguide-demo-leader",
+      "rule": "Dedicated Worker only. It routes verified artifacts and may not be replaced by a business Worker."
+    },
+    "shared_state": {
+      "location_pattern": "shared/tasks/task-{task_id}/",
+      "format": "versioned JSON",
+      "required_fields": ["schema_version", "task_id", "trace_id", "producer", "status"],
+      "artifacts": [
+        "01_interaction_profile.json",
+        "02_learner_state.json",
+        "03_learning_path.json",
+        "04_report_verification.json"
+      ]
+    },
+    "tool_gateway": {
+      "catalog": "tools/tool_catalog.json",
+      "transport": "HTTP JSON",
+      "request_schema_version": "cogniguide.tool-request/v1",
+      "required_request_metadata": ["schema_version", "task_id", "trace_id", "actor"],
+      "authorization": "Gateway validates task scope, actor allow-list, authorization boundary, and data-minimized audit records. Production must bind actor identity to service credentials."
+    },
+    "risk_policy": {
+      "block_before_analysis": ["analysis_authorized=false"],
+      "human_review": ["privacy_finding", "insufficient_evidence", "high_calibration_error", "second_validation_failure"],
+      "terminal_statuses": ["PUBLISHED", "NEEDS_MORE_DATA", "HUMAN_REVIEW_REQUIRED", "BLOCKED"],
+      "auto_execute": [],
+      "approval_only": ["persistent_learning_profile_write"]
+    }
+  },
+  "agents": [
+    {
+      "name": "interaction-evidence-analyst",
+      "skills": ["consent-boundary", "interaction-evidence"],
+      "tools": [
+        "learning_data.get_task_metadata",
+        "learning_data.get_assessment_events",
+        "learning_data.get_interaction_observations",
+        "audit.append"
+      ],
+      "input_artifacts": ["task_request"],
+      "output_artifact": "01_interaction_profile.json"
+    },
+    {
+      "name": "knowledge-state-estimator",
+      "skills": ["knowledge-tracing"],
+      "tools": ["framework.get_domain_pack", "framework.get_bkt_parameters", "audit.append"],
+      "input_artifacts": ["01_interaction_profile.json"],
+      "output_artifact": "02_learner_state.json"
+    },
+    {
+      "name": "learning-path-planner",
+      "skills": ["prerequisite-path"],
+      "tools": ["framework.get_domain_pack", "plan.validate_prerequisites", "audit.append"],
+      "input_artifacts": ["02_learner_state.json"],
+      "output_artifact": "03_learning_path.json"
+    },
+    {
+      "name": "report-verifier",
+      "skills": ["report-verification"],
+      "tools": ["evidence.verify_refs", "plan.validate_prerequisites", "audit.append"],
+      "input_artifacts": [
+        "01_interaction_profile.json",
+        "02_learner_state.json",
+        "03_learning_path.json"
+      ],
+      "output_artifact": "04_report_verification.json"
+    }
+  ],
+  "artifact_dependency_order": [
+    "task_request",
+    "01_interaction_profile.json",
+    "02_learner_state.json",
+    "03_learning_path.json",
+    "04_report_verification.json"
+  ]
+}

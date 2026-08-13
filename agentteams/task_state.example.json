@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.1.0",
+  "task_id": "cg-demo-001",
+  "trace_id": "trace-cg-demo-001",
+  "status": "VERIFIED",
+  "consent": {
+    "analysis_authorized": true,
+    "persistent_profile_authorized": false,
+    "retention": "local-only"
+  },
+  "policy": {
+    "decision": "allow",
+    "human_review_required": false
+  },
+  "artifacts": {
+    "interaction_profile": "shared/tasks/task-cg-demo-001/01_interaction_profile.json",
+    "knowledge_state": "shared/tasks/task-cg-demo-001/02_learner_state.json",
+    "learning_plan": "shared/tasks/task-cg-demo-001/03_learning_path.json",
+    "report": "shared/tasks/task-cg-demo-001/04_report_verification.json"
+  },
+  "review": {
+    "attempt": 0,
+    "max_revisions": 1,
+    "decision": "pass"
+  },
+  "audit_events": [
+    {
+      "sequence": 1,
+      "actor": "cogniguide-demo-leader",
+      "event": "task_received",
+      "status": "ok",
+      "output_hash": "sha256:<artifact-hash>"
+    }
+  ]
+}

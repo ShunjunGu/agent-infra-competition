@@ -1,0 +1,10 @@
+{
+  "session_id": "demo-consent-required-001",
+  "domain": "python_foundations",
+  "learner": {"id": "demo-learner"},
+  "consent": {"analysis_authorized": false, "retention": "local-only"},
+  "learning_signals": [
+    {"concept": "functions", "confidence": 0.9, "observed_correct": false, "evidence_id": "quiz-01"}
+  ],
+  "interactions": []
+}

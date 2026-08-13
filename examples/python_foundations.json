@@ -1,0 +1,76 @@
+{
+  "session_id": "demo-python-foundations-001",
+  "domain": "python_foundations",
+  "learner": {
+    "id": "demo-learner",
+    "goal": "能独立完成简单的数据处理脚本，并知道自己需要补什么。"
+  },
+  "consent": {
+    "analysis_authorized": true,
+    "retention": "local-only"
+  },
+  "learning_signals": [
+    {
+      "concept": "variables",
+      "confidence": 0.85,
+      "observed_correct": true,
+      "evidence_id": "quiz-variables-01",
+      "question_type": "concept"
+    },
+    {
+      "concept": "expressions",
+      "confidence": 0.8,
+      "observed_correct": false,
+      "evidence_id": "quiz-expressions-01",
+      "question_type": "prediction"
+    },
+    {
+      "concept": "functions",
+      "confidence": 0.9,
+      "observed_correct": false,
+      "evidence_id": "exercise-functions-01",
+      "question_type": "debug"
+    },
+    {
+      "concept": "functions",
+      "confidence": 0.75,
+      "observed_correct": false,
+      "evidence_id": "exercise-functions-02",
+      "question_type": "debug"
+    },
+    {
+      "concept": "functions",
+      "confidence": 0.82,
+      "observed_correct": false,
+      "evidence_id": "exercise-functions-03",
+      "question_type": "debug"
+    },
+    {
+      "concept": "collections",
+      "confidence": 0.45,
+      "observed_correct": true,
+      "evidence_id": "exercise-collections-01",
+      "question_type": "application"
+    }
+  ],
+  "interactions": [
+    {
+      "topic": "functions",
+      "question_type": "debug",
+      "evidence_id": "chat-functions-01",
+      "content": "为什么我的函数返回 None？"
+    },
+    {
+      "topic": "functions",
+      "question_type": "debug",
+      "evidence_id": "chat-functions-02",
+      "content": "return 放在哪里才对？"
+    },
+    {
+      "topic": "expressions",
+      "question_type": "prediction",
+      "evidence_id": "chat-expressions-01",
+      "content": "我以为这个表达式会先做除法。"
+    }
+  ]
+}
