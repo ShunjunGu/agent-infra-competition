@@ -20,7 +20,7 @@ AgentTeams Manager（仅创建、健康检查、治理）
 | --- | --- |
 | AgentTeams 原生 Team、Worker、Skill、共享状态和工具契约 | 已实现 |
 | 本地 HTTP 工具网关及授权/证据/路径审计测试 | 已实现 |
-| `gpt-5.6-luna` 实际 Responses API 与 Evidence Analyst Worker 合约测试 | 已通过 |
+| DeepSeek `deepseek-v4-flash` / `deepseek-v4-pro` 实际 API 与 Worker 合约测试 | 已通过 |
 | 真实 AgentTeams Team Room 端到端运行证据 | 需要 Docker Engine 启动后补采集 |
 
 > 当前机器的 Docker Engine 未启动，因此仓库不会把本地 Python 测试写成“已运行真实 AgentTeams”。`cogniguide/` 是确定性参考实现和回归基线，不是参赛主架构。
@@ -45,7 +45,7 @@ Invoke-RestMethod -Method Post `
 
 随后按照 [`agentteams/AGENTTEAMS_RUNBOOK.md`](agentteams/AGENTTEAMS_RUNBOOK.md) 配置 AgentTeams、创建 Team，并将 [`agentteams/run_demo_task_message.md`](agentteams/run_demo_task_message.md) 中的任务发送到 Team Room 的 `@cogniguide-demo-leader`。
 
-使用当前会话中的受控凭据时，还可执行 `python tools\live_worker_contract.py`：它会直接请求真实 `gpt-5.6-luna`，验证授权聚合与未授权阻断两条 Worker 合约；密钥仅从当前环境变量读取，绝不写入仓库。
+使用当前会话中的受控 DeepSeek 凭据时，还可执行 `python tools\live_worker_contract.py`：它默认直接请求真实 `deepseek-v4-flash` 的 Chat Completions API，验证授权聚合与未授权阻断两条 Worker 合约；需要更强推理时可设 `DEEPSEEK_MODEL=deepseek-v4-pro`。密钥仅从当前环境变量读取，绝不写入仓库。
 
 ## 业务闭环
 

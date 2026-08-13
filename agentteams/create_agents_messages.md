@@ -17,8 +17,10 @@
 分析任务。
 
 全局约束：
-1. 使用 AgentTeams 当前已配置且通过连接测试的 OpenAI-compatible 模型；本 Demo
-   目标模型是 gpt-5.6-luna。不得在消息、日志或 Worker 配置中复述 API Key。
+1. 使用 AgentTeams 当前已配置且通过连接测试的 DeepSeek OpenAI-compatible 模型；本
+   Demo 默认模型是 deepseek-v4-flash，接口为 https://api.deepseek.com 的
+   Chat Completions。需要更强推理时可显式换为 deepseek-v4-pro，但不得在消息、日志
+   或 Worker 配置中复述 API Key。
 2. 创建顺序必须是：interaction-evidence-analyst -> knowledge-state-estimator
    -> learning-path-planner -> report-verifier -> cogniguide-demo Team。
 3. 每创建一个业务 Worker 都要确认它健康可运行后才可创建下一个；禁止并行创建。

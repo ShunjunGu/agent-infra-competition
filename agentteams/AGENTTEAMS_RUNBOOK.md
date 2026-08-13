@@ -10,13 +10,14 @@ never put an API key in this repository, screenshots, prompts, or run artifacts.
 - Python 3 is available for the local tool gateway.
 - AgentTeams and Element/Matrix are installed according to the competition's
   official installation instructions.
-- An OpenAI-compatible provider is configured in AgentTeams. For this demo use:
+- A DeepSeek OpenAI-compatible provider is configured in AgentTeams. For this
+  competition demo use the documented Chat Completions profile:
 
 ```text
-Provider: OpenAI-compatible API
-Base URL: https://api.hostcentral.cc/v1
-Wire API: responses
-Model: gpt-5.6-luna
+Provider: DeepSeek / OpenAI-compatible API
+Base URL: https://api.deepseek.com
+Wire API: chat-completions
+Model: deepseek-v4-flash
 API key: read only from local protected configuration
 ```
 
@@ -79,29 +80,32 @@ Manager message.
 Copy [`agentteams.env.example`](agentteams.env.example) to a local ignored file
 only as a non-secret checklist. Configure the API key via the AgentTeams UI,
 installer, or secret store, then perform the provider's built-in model test with
-`gpt-5.6-luna`. A successful direct API probe is not a substitute for a Worker
+`deepseek-v4-flash`. Use `deepseek-v4-pro` only when its stronger reasoning is
+needed and the latency/cost tradeoff is acceptable. A successful direct API probe
+is not a substitute for a Worker
 health check.
 
 For a repeatable preflight that never stores or prints the key, export the key
-only in the current PowerShell session and run the committed Responses API
-contract probe:
+only in the current PowerShell session and run the committed DeepSeek Chat
+Completions contract probe:
 
 ```powershell
-$env:OPENAI_BASE_URL = "https://api.hostcentral.cc"
-$env:OPENAI_MODEL = "gpt-5.6-luna"
-$env:OPENAI_API_KEY = "<local secret only>"
+$env:DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+$env:DEEPSEEK_MODEL = "deepseek-v4-flash"
+$env:DEEPSEEK_API_KEY = "<local secret only>"
 python tools\llm_contract_smoke.py
 ```
 
 Expected output is a small JSON object with `"ok": true`, the requested model,
-and `"status": "completed"`. The probe handles providers that return text in
-the Responses `output[]` array instead of the convenience `output_text` field.
-Clear the session variable or close the PowerShell window afterward.
+`"wire_api": "chat-completions"`, and `"status": "completed"`. The adapter
+also retains an optional OpenAI Responses compatibility branch, but it is not the
+DeepSeek default. Clear the session variable or close the PowerShell window
+afterward.
 
 Run the stronger live Worker preflight as well. It makes two actual
-`gpt-5.6-luna` Responses calls with the Evidence Analyst contract, validates the
-authorized aggregation and the fail-closed consent branch, and never fabricates
-the model response:
+`deepseek-v4-flash` Chat Completions calls with the Evidence Analyst contract,
+validates the authorized aggregation and the fail-closed consent branch, and
+never fabricates the model response:
 
 ```powershell
 python tools\live_worker_contract.py

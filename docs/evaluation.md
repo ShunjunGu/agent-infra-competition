@@ -19,18 +19,19 @@ py -m unittest discover -s agentteams/tests -v
 
 ## 已执行的真实模型预检
 
-以下预检通过真实 OpenAI-compatible Responses API 调用模型，不伪造模型输出，也不把
+以下预检通过真实 DeepSeek OpenAI-compatible Chat Completions API 调用模型，不伪造模型输出，也不把
 它表述为 AgentTeams Team Room 运行：
 
 ```powershell
-$env:OPENAI_BASE_URL = "https://api.hostcentral.cc"
-$env:OPENAI_MODEL = "gpt-5.6-luna"
-$env:OPENAI_API_KEY = "<local secret only>"
+$env:DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+$env:DEEPSEEK_MODEL = "deepseek-v4-flash"
+$env:DEEPSEEK_API_KEY = "<local secret only>"
 python agentteams\tools\live_worker_contract.py
 ```
 
-本次验证中，`gpt-5.6-luna` 实际生成了授权场景的 Evidence Analyst JSON（`functions`
-聚合为 3 条可判分事件、0 条正确、6 个 evidence refs），并对未授权场景返回
+本次验证中，`deepseek-v4-flash` 和 `deepseek-v4-pro` 都实际通过 DeepSeek Chat
+Completions 返回了 JSON 健康合约，并都通过两条 Evidence Analyst Worker 预检：授权场景
+的 `functions` 聚合为 3 条可判分事件、0 条正确、6 个 evidence refs；未授权场景返回
 `BLOCKED` 且不产生概念证据或引用。脚本只从当前进程环境读取密钥，输出为脱敏摘要。
 
 ## 推荐的竞赛展示指标

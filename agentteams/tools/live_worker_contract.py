@@ -1,8 +1,9 @@
-"""Run live per-Worker contract checks against an OpenAI-compatible Responses API.
+"""Run live per-Worker contract checks against a real compatible model API.
 
 The model response is produced by the configured external model; this module does
-not mock LLM output. It is intentionally a per-Worker preflight, not an
-AgentTeams orchestrator or a substitute for the Team Room end-to-end run.
+not mock LLM output. It defaults to DeepSeek's Chat Completions interface and is
+intentionally a per-Worker preflight, not an AgentTeams orchestrator or a
+substitute for the Team Room end-to-end run.
 """
 
 from __future__ import annotations
@@ -14,13 +15,29 @@ from pathlib import Path
 import sys
 import time
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 try:
-    from .llm_contract_smoke import extract_output_text, responses_url
+    from .llm_contract_smoke import (
+        CHAT_COMPLETIONS,
+        DEFAULT_BASE_URL,
+        DEFAULT_MODEL,
+        env_value,
+        extract_output_text,
+        invoke_completion,
+        normalize_wire_api,
+        normalized_completion_status,
+    )
 except ImportError:  # Supports `python tools/live_worker_contract.py`.
-    from llm_contract_smoke import extract_output_text, responses_url
+    from llm_contract_smoke import (  # type: ignore[no-redef]
+        CHAT_COMPLETIONS,
+        DEFAULT_BASE_URL,
+        DEFAULT_MODEL,
+        env_value,
+        extract_output_text,
+        invoke_completion,
+        normalize_wire_api,
+        normalized_completion_status,
+    )
 
 
 SCENARIO_DIR = Path(__file__).resolve().parents[1] / "scenarios"
@@ -40,26 +57,27 @@ def metadata(scenario: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def call_model(base_url: str, model: str, api_key: str, prompt: str) -> tuple[dict[str, Any], dict[str, Any]]:
-    body = json.dumps({"model": model, "input": prompt, "max_output_tokens": 1400}).encode("utf-8")
-    request = Request(
-        responses_url(base_url),
-        data=body,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        method="POST",
+def call_model(
+    base_url: str,
+    model: str,
+    api_key: str,
+    prompt: str,
+    *,
+    wire_api: str,
+    max_output_tokens: int,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    response = invoke_completion(
+        base_url,
+        model,
+        api_key,
+        prompt,
+        wire_api=wire_api,
+        max_output_tokens=max_output_tokens,
     )
+    if normalized_completion_status(response, wire_api) != "completed":
+        raise RuntimeError("provider response did not complete")
     try:
-        with urlopen(request, timeout=90) as result:
-            response = json.loads(result.read().decode("utf-8"))
-    except HTTPError as error:
-        raise RuntimeError(f"provider returned HTTP {error.code}") from error
-    except URLError as error:
-        raise RuntimeError(f"provider network error: {error.reason}") from error
-
-    if response.get("status") != "completed":
-        raise RuntimeError(f"provider response did not complete: {response.get('status')!r}")
-    try:
-        artifact = json.loads(extract_output_text(response))
+        artifact = json.loads(extract_output_text(response, wire_api))
     except json.JSONDecodeError as error:
         raise RuntimeError("model did not return a JSON Worker artifact") from error
     if not isinstance(artifact, dict):
@@ -154,33 +172,67 @@ def validate_consent(artifact: dict[str, Any], scenario: dict[str, Any]) -> dict
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run two live CogniGuide Worker contract checks.")
-    parser.add_argument("--base-url", default=os.environ.get("OPENAI_BASE_URL") or os.environ.get("AT_LLM_BASE_URL"))
-    parser.add_argument("--model", default=os.environ.get("OPENAI_MODEL") or os.environ.get("AT_MODEL"))
-    parser.add_argument("--api-key-env", default="OPENAI_API_KEY")
+    parser.add_argument(
+        "--base-url",
+        default=env_value("DEEPSEEK_BASE_URL", "OPENAI_BASE_URL", "AT_LLM_BASE_URL", default=DEFAULT_BASE_URL),
+    )
+    parser.add_argument(
+        "--model",
+        default=env_value("DEEPSEEK_MODEL", "OPENAI_MODEL", "AT_MODEL", default=DEFAULT_MODEL),
+    )
+    parser.add_argument(
+        "--wire-api",
+        default=env_value("DEEPSEEK_WIRE_API", "AT_LLM_WIRE_API", default=CHAT_COMPLETIONS),
+        help="chat-completions (DeepSeek default) or responses",
+    )
+    parser.add_argument("--api-key-env", default="DEEPSEEK_API_KEY")
+    parser.add_argument(
+        "--max-output-tokens",
+        type=int,
+        default=4096,
+        help="completion budget per Worker call; DeepSeek V4 may consume part of it in hidden reasoning",
+    )
     args = parser.parse_args()
+    try:
+        wire_api = normalize_wire_api(args.wire_api)
+    except ValueError as error:
+        parser.error(str(error))
     api_key = os.environ.get(args.api_key_env)
-    if not args.base_url:
-        parser.error("set --base-url or OPENAI_BASE_URL/AT_LLM_BASE_URL")
-    if not args.model:
-        parser.error("set --model or OPENAI_MODEL/AT_MODEL")
     if not api_key:
         parser.error(f"set the API key in environment variable {args.api_key_env}")
+    if args.max_output_tokens < 256:
+        parser.error("--max-output-tokens must be at least 256")
 
     checks: list[dict[str, Any]] = []
     started = time.perf_counter()
     authorized = load_scenario("python_foundations_overconfidence")
-    artifact, response = call_model(args.base_url, args.model, api_key, authorized_prompt(authorized))
+    artifact, response = call_model(
+        args.base_url,
+        args.model,
+        api_key,
+        authorized_prompt(authorized),
+        wire_api=wire_api,
+        max_output_tokens=args.max_output_tokens,
+    )
     checks.append(validate_authorized(artifact, authorized) | {"total_tokens": response.get("usage", {}).get("total_tokens")})
 
     consent = load_scenario("consent_required")
-    artifact, response = call_model(args.base_url, args.model, api_key, consent_prompt(consent))
+    artifact, response = call_model(
+        args.base_url,
+        args.model,
+        api_key,
+        consent_prompt(consent),
+        wire_api=wire_api,
+        max_output_tokens=args.max_output_tokens,
+    )
     checks.append(validate_consent(artifact, consent) | {"total_tokens": response.get("usage", {}).get("total_tokens")})
 
     print(
         json.dumps(
             {
                 "ok": True,
-                "model": args.model,
+                "model": response.get("model", args.model),
+                "wire_api": wire_api,
                 "kind": "live_worker_contract_preflight",
                 "latency_ms": round((time.perf_counter() - started) * 1000),
                 "checks": checks,
