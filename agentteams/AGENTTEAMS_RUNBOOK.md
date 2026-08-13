@@ -32,7 +32,7 @@ docker run --rm hello-world
 Open a dedicated PowerShell window:
 
 ```powershell
-Set-Location D:\AIcompetation\agent-infra-competition\agentteams
+Set-Location .\agentteams
 .\run_gateway.bat
 ```
 

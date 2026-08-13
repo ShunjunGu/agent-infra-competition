@@ -27,10 +27,11 @@ AgentTeams Manager（仅创建、健康检查、治理）
 
 ## 30 秒检查主 Demo 资产
 
+在仓库根目录执行：
+
 ```powershell
-cd D:\AIcompetation\agent-infra-competition\agentteams
-py -m unittest discover -s tests -v
-py tools\mock_tool_server.py --host 127.0.0.1 --port 18089
+py -m unittest discover -s agentteams/tests -v
+py agentteams\tools\mock_tool_server.py --host 127.0.0.1 --port 18089
 ```
 
 另开一个 PowerShell：
